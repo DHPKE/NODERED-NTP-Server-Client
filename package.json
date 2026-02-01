@@ -1,7 +1,7 @@
 {
   "name": "node-red-contrib-ntp-client",
-  "version": "1.0.0",
-  "description": "Node-RED node to get current time from configurable NTP servers (internet or local)",
+  "version": "1.1.0",
+  "description": "Node-RED node to get current time from configurable NTP servers (internet or local) with automatic interval polling and flexible output formatting",
   "main": "ntp-client.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,7 +13,10 @@
     "network-time-protocol",
     "clock",
     "sync",
-    "time-server"
+    "time-server",
+    "interval",
+    "polling",
+    "timestamp"
   ],
   "node-red": {
     "nodes": {

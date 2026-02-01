@@ -9,8 +9,17 @@ module.exports = function(RED) {
         node.ntpServer = config.ntpServer || 'pool.ntp.org';
         node.port = parseInt(config.port) || 123;
         node.timeout = parseInt(config.timeout) || 5000;
+        node.interval = parseInt(config.interval) || 0;
+        node.intervalUnit = config.intervalUnit || 'seconds';
+        node.outputFormat = config.outputFormat || 'object';
+        node.dateFormat = config.dateFormat || 'iso';
         
-        node.on('input', function(msg) {
+        let intervalTimer = null;
+        
+        // Function to perform NTP query
+        const doQuery = function(msg) {
+            msg = msg || {};
+            
             // Allow dynamic override of NTP server
             const server = msg.ntpServer || node.ntpServer;
             const port = msg.ntpPort || node.port;
@@ -19,14 +28,47 @@ module.exports = function(RED) {
             
             queryNTP(server, port, node.timeout)
                 .then(result => {
-                    msg.payload = {
-                        timestamp: result.timestamp,
-                        date: result.date,
-                        iso: result.iso,
-                        unixTime: result.unixTime,
-                        server: server,
-                        roundTripDelay: result.roundTripDelay
-                    };
+                    const date = new Date(result.timestamp);
+                    let output;
+                    
+                    // Format output based on configuration
+                    if (node.outputFormat === 'string') {
+                        switch(node.dateFormat) {
+                            case 'iso':
+                                output = result.iso;
+                                break;
+                            case 'locale':
+                                output = date.toLocaleString();
+                                break;
+                            case 'date':
+                                output = date.toLocaleDateString();
+                                break;
+                            case 'time':
+                                output = date.toLocaleTimeString();
+                                break;
+                            case 'unix':
+                                output = result.unixTime.toString();
+                                break;
+                            case 'timestamp':
+                                output = result.timestamp.toString();
+                                break;
+                            default:
+                                output = result.iso;
+                        }
+                        msg.payload = output;
+                    } else {
+                        // Default object output
+                        msg.payload = {
+                            timestamp: result.timestamp,
+                            date: result.date,
+                            iso: result.iso,
+                            locale: date.toLocaleString(),
+                            unixTime: result.unixTime,
+                            server: server,
+                            roundTripDelay: result.roundTripDelay
+                        };
+                    }
+                    
                     node.status({fill: "green", shape: "dot", text: "success"});
                     node.send(msg);
                 })
@@ -34,9 +76,47 @@ module.exports = function(RED) {
                     node.status({fill: "red", shape: "ring", text: "error"});
                     node.error("NTP query failed: " + err.message, msg);
                 });
+        };
+        
+        // Handle manual input
+        node.on('input', function(msg) {
+            doQuery(msg);
         });
         
+        // Setup interval if configured
+        if (node.interval > 0) {
+            let intervalMs = node.interval * 1000; // default to seconds
+            
+            switch(node.intervalUnit) {
+                case 'milliseconds':
+                    intervalMs = node.interval;
+                    break;
+                case 'seconds':
+                    intervalMs = node.interval * 1000;
+                    break;
+                case 'minutes':
+                    intervalMs = node.interval * 60 * 1000;
+                    break;
+                case 'hours':
+                    intervalMs = node.interval * 60 * 60 * 1000;
+                    break;
+            }
+            
+            // Initial query
+            doQuery({});
+            
+            // Setup recurring interval
+            intervalTimer = setInterval(() => {
+                doQuery({});
+            }, intervalMs);
+            
+            node.status({fill: "green", shape: "ring", text: `interval: ${node.interval} ${node.intervalUnit}`});
+        }
+        
         node.on('close', function() {
+            if (intervalTimer) {
+                clearInterval(intervalTimer);
+            }
             node.status({});
         });
     }

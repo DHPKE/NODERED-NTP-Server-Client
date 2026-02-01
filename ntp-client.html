@@ -6,7 +6,11 @@
             name: {value: ""},
             ntpServer: {value: "pool.ntp.org", required: true},
             port: {value: 123, required: true, validate: RED.validators.number()},
-            timeout: {value: 5000, required: true, validate: RED.validators.number()}
+            timeout: {value: 5000, required: true, validate: RED.validators.number()},
+            interval: {value: 0, validate: RED.validators.number()},
+            intervalUnit: {value: "seconds"},
+            outputFormat: {value: "object"},
+            dateFormat: {value: "iso"}
         },
         inputs: 1,
         outputs: 1,
@@ -37,10 +41,61 @@
         <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout (ms)</label>
         <input type="number" id="node-input-timeout" placeholder="5000">
     </div>
+    <div class="form-row">
+        <label for="node-input-interval"><i class="fa fa-repeat"></i> Interval</label>
+        <input type="number" id="node-input-interval" placeholder="0" style="width: 100px;">
+        <select id="node-input-intervalUnit" style="width: 150px;">
+            <option value="milliseconds">Milliseconds</option>
+            <option value="seconds">Seconds</option>
+            <option value="minutes">Minutes</option>
+            <option value="hours">Hours</option>
+        </select>
+    </div>
+    <div class="form-tips" style="margin-left: 100px; margin-bottom: 10px;">
+        <b>Tip:</b> Set to 0 to disable automatic interval (manual trigger only)
+    </div>
+    <div class="form-row">
+        <label for="node-input-outputFormat"><i class="fa fa-file-code-o"></i> Output Format</label>
+        <select id="node-input-outputFormat" style="width: 250px;">
+            <option value="object">Object (all formats)</option>
+            <option value="string">String (formatted)</option>
+        </select>
+    </div>
+    <div class="form-row" id="dateFormatRow">
+        <label for="node-input-dateFormat"><i class="fa fa-calendar"></i> Date Format</label>
+        <select id="node-input-dateFormat" style="width: 250px;">
+            <option value="iso">ISO 8601 (2024-02-01T14:00:00.000Z)</option>
+            <option value="locale">Locale String (2/1/2024, 2:00:00 PM)</option>
+            <option value="date">Date Only (2/1/2024)</option>
+            <option value="time">Time Only (2:00:00 PM)</option>
+            <option value="unix">Unix Timestamp (seconds)</option>
+            <option value="timestamp">Timestamp (milliseconds)</option>
+        </select>
+    </div>
+</script>
+
+<script type="text/javascript">
+    (function() {
+        const outputFormatSelect = document.getElementById('node-input-outputFormat');
+        const dateFormatRow = document.getElementById('dateFormatRow');
+        
+        if (outputFormatSelect) {
+            outputFormatSelect.addEventListener('change', function() {
+                if (dateFormatRow) {
+                    dateFormatRow.style.display = (this.value === 'string') ? '' : 'none';
+                }
+            });
+            
+            // Set initial state
+            if (dateFormatRow) {
+                dateFormatRow.style.display = (outputFormatSelect.value === 'string') ? '' : 'none';
+            }
+        }
+    })();
 </script>
 
 <script type="text/html" data-help-name="ntp-client">
-    <p>Queries an NTP server and returns the current time.</p>
+    <p>Queries an NTP server and returns the current time. Can run automatically at a configured interval or be triggered manually.</p>
     
     <h3>Inputs</h3>
     <dl class="message-properties">
@@ -52,16 +107,19 @@
 
     <h3>Outputs</h3>
     <dl class="message-properties">
-        <dt>payload <span class="property-type">object</span></dt>
+        <dt>payload <span class="property-type">object | string</span></dt>
         <dd>
+            <p><b>Object format</b> (default) contains:</p>
             <ul>
                 <li><code>timestamp</code> - Unix timestamp in milliseconds</li>
                 <li><code>date</code> - Human-readable date string</li>
                 <li><code>iso</code> - ISO 8601 formatted date string</li>
+                <li><code>locale</code> - Locale-formatted date string</li>
                 <li><code>unixTime</code> - Unix timestamp in seconds</li>
                 <li><code>server</code> - NTP server used</li>
                 <li><code>roundTripDelay</code> - Network round-trip time in ms</li>
             </ul>
+            <p><b>String format</b> outputs a single formatted time string based on the selected date format.</p>
         </dd>
     </dl>
 
@@ -69,6 +127,21 @@
     <p>This node queries an NTP (Network Time Protocol) server to get the current time. 
     The NTP server can be configured in the node settings, or overridden dynamically 
     via <code>msg.ntpServer</code>.</p>
+    
+    <h4>Automatic Mode</h4>
+    <p>Set an interval (in milliseconds, seconds, minutes, or hours) to have the node automatically 
+    query the NTP server periodically without needing an input trigger. The node will send a message 
+    at each interval. Set interval to 0 to disable automatic mode.</p>
+    
+    <h4>Manual Mode</h4>
+    <p>With interval set to 0, the node only queries when it receives an input message.</p>
+    
+    <h4>Output Formats</h4>
+    <p>Choose between:</p>
+    <ul>
+        <li><b>Object</b> - Returns all time formats in a single object</li>
+        <li><b>String</b> - Returns a single formatted string (ISO, locale, date only, time only, unix timestamp)</li>
+    </ul>
     
     <p>You can use public NTP servers like:</p>
     <ul>
@@ -83,4 +156,7 @@
     <p><b>NTP Server:</b> The hostname or IP address of the NTP server.</p>
     <p><b>Port:</b> The UDP port (default: 123).</p>
     <p><b>Timeout:</b> Maximum time to wait for a response in milliseconds (default: 5000).</p>
+    <p><b>Interval:</b> How often to automatically query the server. Set to 0 for manual mode only.</p>
+    <p><b>Output Format:</b> Choose object (all formats) or string (single format).</p>
+    <p><b>Date Format:</b> When using string output, select the desired format.</p>
 </script>
