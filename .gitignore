@@ -1,0 +1,35 @@
+# .gitignore for Node-RED node module
+
+# Node modules
+node_modules/
+
+# npm debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test coverage
+coverage/
+
+# Build output
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# Package locks (optional - uncomment if you want to ignore)
+# package-lock.json
+# yarn.lock

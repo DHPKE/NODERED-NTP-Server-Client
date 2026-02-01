@@ -1,0 +1,86 @@
+<script type="text/javascript">
+    RED.nodes.registerType('ntp-client', {
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value: ""},
+            ntpServer: {value: "pool.ntp.org", required: true},
+            port: {value: 123, required: true, validate: RED.validators.number()},
+            timeout: {value: 5000, required: true, validate: RED.validators.number()}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "clock.svg",
+        label: function() {
+            return this.name || "ntp-client";
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="ntp-client">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-ntpServer"><i class="fa fa-server"></i> NTP Server</label>
+        <input type="text" id="node-input-ntpServer" placeholder="pool.ntp.org">
+    </div>
+    <div class="form-row">
+        <label for="node-input-port"><i class="fa fa-plug"></i> Port</label>
+        <input type="number" id="node-input-port" placeholder="123">
+    </div>
+    <div class="form-row">
+        <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout (ms)</label>
+        <input type="number" id="node-input-timeout" placeholder="5000">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="ntp-client">
+    <p>Queries an NTP server and returns the current time.</p>
+    
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt class="optional">ntpServer <span class="property-type">string</span></dt>
+        <dd>Override the configured NTP server for this request.</dd>
+        <dt class="optional">ntpPort <span class="property-type">number</span></dt>
+        <dd>Override the configured port for this request.</dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">object</span></dt>
+        <dd>
+            <ul>
+                <li><code>timestamp</code> - Unix timestamp in milliseconds</li>
+                <li><code>date</code> - Human-readable date string</li>
+                <li><code>iso</code> - ISO 8601 formatted date string</li>
+                <li><code>unixTime</code> - Unix timestamp in seconds</li>
+                <li><code>server</code> - NTP server used</li>
+                <li><code>roundTripDelay</code> - Network round-trip time in ms</li>
+            </ul>
+        </dd>
+    </dl>
+
+    <h3>Details</h3>
+    <p>This node queries an NTP (Network Time Protocol) server to get the current time. 
+    The NTP server can be configured in the node settings, or overridden dynamically 
+    via <code>msg.ntpServer</code>.</p>
+    
+    <p>You can use public NTP servers like:</p>
+    <ul>
+        <li><code>pool.ntp.org</code> (default)</li>
+        <li><code>time.google.com</code></li>
+        <li><code>time.cloudflare.com</code></li>
+        <li><code>time.apple.com</code></li>
+        <li>Or your own local NTP server (e.g., <code>192.168.1.1</code>)</li>
+    </ul>
+
+    <h3>Configuration</h3>
+    <p><b>NTP Server:</b> The hostname or IP address of the NTP server.</p>
+    <p><b>Port:</b> The UDP port (default: 123).</p>
+    <p><b>Timeout:</b> Maximum time to wait for a response in milliseconds (default: 5000).</p>
+</script>
