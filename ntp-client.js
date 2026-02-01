@@ -13,6 +13,7 @@ module.exports = function(RED) {
         node.intervalUnit = config.intervalUnit || 'seconds';
         node.outputFormat = config.outputFormat || 'object';
         node.dateFormat = config.dateFormat || 'iso';
+        node.timeFormat24h = config.timeFormat24h !== false; // default to 24h
         
         let intervalTimer = null;
         
@@ -38,13 +39,17 @@ module.exports = function(RED) {
                                 output = result.iso;
                                 break;
                             case 'locale':
-                                output = date.toLocaleString();
+                                output = date.toLocaleString(undefined, {
+                                    hour12: !node.timeFormat24h
+                                });
                                 break;
                             case 'date':
                                 output = date.toLocaleDateString();
                                 break;
                             case 'time':
-                                output = date.toLocaleTimeString();
+                                output = date.toLocaleTimeString(undefined, {
+                                    hour12: !node.timeFormat24h
+                                });
                                 break;
                             case 'unix':
                                 output = result.unixTime.toString();
@@ -62,7 +67,12 @@ module.exports = function(RED) {
                             timestamp: result.timestamp,
                             date: result.date,
                             iso: result.iso,
-                            locale: date.toLocaleString(),
+                            locale: date.toLocaleString(undefined, {
+                                hour12: !node.timeFormat24h
+                            }),
+                            time: date.toLocaleTimeString(undefined, {
+                                hour12: !node.timeFormat24h
+                            }),
                             unixTime: result.unixTime,
                             server: server,
                             roundTripDelay: result.roundTripDelay

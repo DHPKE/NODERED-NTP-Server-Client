@@ -8,6 +8,7 @@ A Node-RED node that queries NTP (Network Time Protocol) servers to get the curr
 - ✅ **Configurable intervals** - milliseconds, seconds, minutes, or hours
 - ✅ **Flexible output formats** - Object or formatted string
 - ✅ **Multiple date formats** - ISO, locale, date-only, time-only, Unix timestamps
+- ✅ **12h/24h time format** - Choose AM/PM or 24-hour display
 - ✅ **Works with public internet NTP servers**
 - ✅ **Works with local/private NTP servers**
 - ✅ **Configurable port and timeout**
@@ -91,11 +92,16 @@ Then restart Node-RED.
 
 - **Date Format** (when String output is selected):
   - **ISO 8601**: `2024-02-01T14:00:00.000Z`
-  - **Locale String**: `2/1/2024, 2:00:00 PM`
+  - **Locale String**: `2/1/2024, 2:00:00 PM` or `2/1/2024, 14:00:00`
   - **Date Only**: `2/1/2024`
-  - **Time Only**: `2:00:00 PM`
+  - **Time Only**: `2:00:00 PM` or `14:00:00`
   - **Unix Timestamp**: `1706799600` (seconds)
   - **Timestamp**: `1706799600000` (milliseconds)
+
+- **Time Format**:
+  - **24-hour format** (checked): Times displayed as `14:00:00`
+  - **12-hour format** (unchecked): Times displayed as `2:00:00 PM`
+  - Applies to locale and time-only outputs
 
 ## Input
 
@@ -113,7 +119,8 @@ The node accepts any message as a trigger (when in manual mode or to override au
   timestamp: 1706799600000,      // Unix timestamp in milliseconds
   date: "Thu Feb 01 2024...",    // Human-readable date string
   iso: "2024-02-01T14:00:00.000Z", // ISO 8601 format
-  locale: "2/1/2024, 2:00:00 PM",  // Locale-formatted string
+  locale: "2/1/2024, 2:00:00 PM",  // Locale-formatted string (respects 12h/24h)
+  time: "2:00:00 PM",              // Time-only string (respects 12h/24h)
   unixTime: 1706799600,          // Unix timestamp in seconds
   server: "pool.ntp.org",        // NTP server that was queried
   roundTripDelay: 45             // Network latency in milliseconds
@@ -124,9 +131,11 @@ The node accepts any message as a trigger (when in manual mode or to override au
 
 Returns a single string in the selected format:
 - ISO: `"2024-02-01T14:00:00.000Z"`
-- Locale: `"2/1/2024, 2:00:00 PM"`
+- Locale (12h): `"2/1/2024, 2:00:00 PM"`
+- Locale (24h): `"2/1/2024, 14:00:00"`
 - Date: `"2/1/2024"`
-- Time: `"2:00:00 PM"`
+- Time (12h): `"2:00:00 PM"`
+- Time (24h): `"14:00:00"`
 - Unix: `"1706799600"`
 - Timestamp: `"1706799600000"`
 
@@ -242,6 +251,7 @@ This node implements the NTP protocol (RFC 5905) using UDP datagrams. It:
 
 ## Version History
 
+- **1.2.0** - Added 12-hour/24-hour time format option
 - **1.1.0** - Added automatic interval polling and flexible output formats
 - **1.0.0** - Initial release with manual trigger mode
 
